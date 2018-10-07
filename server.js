@@ -1,4 +1,5 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var midi = require('midi');
@@ -55,7 +56,7 @@ const notes = {
     "Bb4": "70"
 };
 
-
+app.use(express.static('public'));
 app.get('/*', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
