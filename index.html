@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OKGO + Twilio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/favicon_57.png"/>
+    <link rel="apple-touch-icon" href="/favicon_57.png"/>
+    <link rel="apple-touch-icon" sizes="72x72" href="/favicon_72.png"/>
+    <link rel="apple-touch-icon" sizes="114x114" href="/favicon_114.png"/>
+    <link rel="stylesheet" href="bell.css">
+    <style>
+        body {
+            background-color: #3D3D3D;
+            color: #b5d592;
+        }
+
+        #music {
+            min-height: 50vh;
+            font-size: 40vh;
+            text-align: center;
+            transform: rotate(90deg);
+            font-family: "Comic Sans MS";
+        }
+
+    </style>
+    <!--<link rel="stylesheet" href="/bell.css">-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<script>
+    var socket = io();
+
+    var selectedNote = "-1";
+    let lastX, lastY, lastZ;
+    let moveCounter = 0;        // i have no idea what the intent of this is.
+    var debounceTime = 1000;    // 600 ms seemed too short.  i was getting double events.
+    var blocked = false;
+
+    function emitNote () {
+        socket.emit('note', selectedNote);
+    }
+
+    function handleMotion (e) {
+        let acc = e.acceleration;
+        if (!acc.hasOwnProperty('x')) {
+
+            acc = e.accelerationIncludingGravity;
+        }
+
+        if (!acc.x) return;
+
+        //only log if x,y,z > 1
+        if (Math.abs(acc.x) >= 1 &&
+            Math.abs(acc.y) >= 1 &&
+            Math.abs(acc.z) >= 1) {
+            // console.log('motion', acc);
+            if (!lastX) {
+                lastX = acc.x;
+                lastY = acc.y;
+                lastZ = acc.z;
+                return;
+            }
+
+            // Make sure we see a big enough swing in the handbell
+            let deltaX = Math.abs(acc.x - lastX);
+            let deltaY = Math.abs(acc.y - lastY);
+            let deltaZ = Math.abs(acc.z - lastZ);
+
+
+            if (deltaX + deltaY + deltaZ > 3) {
+                // console.log(lastX, acc.x, lastY, acc.y, lastZ, acc.z);
+                moveCounter++;
+                // console.log(moveCounter, Math.round(acc.y));
+            } else {
+                moveCounter = Math.max(0, --moveCounter);
+            }
+
+            // This should trigger somewhere near the top of the handbell action
+            // in order to account for delay in audio.play(). Needs to be swung pretty hard.
+            if (moveCounter > 1 && acc.y < -7) {
+                // Make sure we're not calling playNote() twice in a row.
+                // JOSH:  This debounce seems really high for a music note.
+                sendNote();
+                moveCounter = 0;
+                lastZ = 0;
+                lastY = 0;
+                lastX = 0;
+            } else {
+                lastX = acc.x;
+                lastY = acc.y;
+                lastZ = acc.z;
+            }
+        }
+    }
+
+    function sendNote () {
+        if (!blocked) {
+            blocked = true;
+            emitNote();
+            setTimeout(function () {
+                blocked = false;
+            }, debounceTime)
+        }
+    }
+
+    $(document).ready(function () {
+
+        window.addEventListener("devicemotion", handleMotion, true);
+
+        var savedNote = localStorage.getItem("note");
+
+        if (savedNote) {
+            selectedNote = savedNote;
+            $("#music").html(selectedNote);
+            $('#whichnote').val(selectedNote);
+        }
+
+        $("#whichnote").change(function () {
+            var which = $("#whichnote option:selected");
+            if (which.val() !== "-1") {
+                selectedNote = which.val();
+                $("#music").html(selectedNote);
+                localStorage.setItem("note", selectedNote);
+            }
+        });
+    });
+</script>
+
+<body class="vbox viewport">
+<select id="whichnote">
+    <option value="A#2">A#2</option>
+    <option value="A#3">A#3</option>
+    <option value="A0">A0</option>
+    <option value="A2">A2</option>
+    <option value="A3">A3</option>
+    <option value="A4">A4</option>
+    <option value="Ab2">Ab2</option>
+    <option value="Ab3">Ab3</option>
+    <option value="Ab4">Ab4</option>
+    <option value="B2">B2</option>
+    <option value="B3">B3</option>
+    <option value="B4">B4</option>
+    <option value="Bb4">Bb4</option>
+    <option value="C2">C2</option>
+    <option value="C3">C3</option>
+    <option value="C4">C4</option>
+    <option value="C5">C5</option>
+    <option value="D2">D2</option>
+    <option value="D3">D3</option>
+    <option value="D4">D4</option>
+    <option value="D5">D5</option>
+    <option value="Db2">Db2</option>
+    <option value="Db3">Db3</option>
+    <option value="Db4">Db4</option>
+    <option value="Db5">Db5</option>
+    <option value="E2">E2</option>
+    <option value="E3">E3</option>
+    <option value="E4">E4</option>
+    <option value="E5">E5</option>
+    <option value="E54">E54</option>
+    <option value="Eb2">Eb2</option>
+    <option value="Eb3">Eb3</option>
+    <option value="Eb4">Eb4</option>
+    <option value="Eb5">Eb5</option>
+    <option value="F2">F2</option>
+    <option value="F3">F3</option>
+    <option value="F4">F4</option>
+    <option value="F5">F5</option>
+    <option value="G2">G2</option>
+    <option value="G3">G3</option>
+    <option value="G4">G4</option>
+    <option value="Gb2">Gb2</option>
+    <option value="Gb3">Gb3</option>
+    <option value="Gb4">Gb4</option>
+    <option value="Gb5">Gb5</option>
+    <option value="-1" selected="selected">Select a Note</option>
+</select>
+<div id="music">
+    #    <!--<span id="rotateText">#</span>-->
+</div>
+
+</body>
+</html>
