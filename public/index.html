@@ -60,12 +60,12 @@
         if (Math.abs(acc.x) >= 1) {
             // console.log('motion', acc);
             if (!primed) {
-                primed = acc.x >= -11 && acc.x <= -7;
+                primed = acc.x >= -11 && acc.x <= -3;
                 return;
             } 
 
             if (primed && !down) {
-                down = acc.x >= 6 && acc.x <= 11;
+                down = acc.x >= 4 && acc.x <= 13;
                 return
             }
 
@@ -76,13 +76,6 @@
                     down = up = primed = false;
                 } 
                 return
-            }
-
-            if (primed && down && up && !rest) {
-                rest = acc.x >= -3 && acc.x <= 3;
-                if (rest) {
-                    rest = down = up = primed = false;
-                }
             }
             // Make sure we see a big enough swing in the handbell
             
