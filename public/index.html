@@ -10,7 +10,10 @@
     <link rel="stylesheet" href="/bell.css">
     <!--<link rel="stylesheet" href="/bell.css">-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="socket.io.js"></script>
+    <script type="text/javascript" src="motiongesture.js"></script>
+    <script type="text/javascript" src="motiongesture-library.js"></script>
+        
 </head>
 <script>
     var socket = io();
@@ -27,10 +30,13 @@
     });
 
     var selectedNote = "-1";
-    let lastX, lastY, lastZ;
-    let moveCounter = 0;        // i have no idea what the intent of this is.
-    var debounceTime = 1000;    // 600 ms seemed too short.  i was getting double events.
-    var blocked = false;
+    let lastX, lastY, lastZ, lastDelta;
+    let blocked = false;        // i have no idea what the intent of this is.
+    var debounceTime = 500;    // 600 ms seemed too short.  i was getting double events.
+    let primed = false;
+    let down = false;
+    let up = false;
+    let rest = false;
 
     function emitNote () {
         socket.emit('note', selectedNote);
@@ -44,48 +50,42 @@
         }
 
         if (!acc.x) return;
+        acc.x = Math.round(acc.x)
+        acc.y = Math.round(acc.y)
+        acc.z = Math.round(acc.z)
+
+        
 
         //only log if x,y,z > 1
-        if (Math.abs(acc.x) >= 1 &&
-            Math.abs(acc.y) >= 1 &&
-            Math.abs(acc.z) >= 1) {
+        if (Math.abs(acc.x) >= 1) {
             // console.log('motion', acc);
-            if (!lastX) {
-                lastX = acc.x;
-                lastY = acc.y;
-                lastZ = acc.z;
+            if (!primed) {
+                primed = acc.x >= -11 && acc.x <= -7;
                 return;
+            } 
+
+            if (primed && !down) {
+                down = acc.x >= 6 && acc.x <= 11;
+                return
             }
 
+            if (primed && down && !up) {
+                up = acc.x <= -30;
+                if (up) {
+                    sendNote();
+                    down = up = primed = false;
+                } 
+                return
+            }
+
+            if (primed && down && up && !rest) {
+                rest = acc.x >= -3 && acc.x <= 3;
+                if (rest) {
+                    rest = down = up = primed = false;
+                }
+            }
             // Make sure we see a big enough swing in the handbell
-            let deltaX = Math.abs(acc.x - lastX);
-            let deltaY = Math.abs(acc.y - lastY);
-            let deltaZ = Math.abs(acc.z - lastZ);
-
-
-            if (deltaX + deltaY + deltaZ > 3) {
-                // console.log(lastX, acc.x, lastY, acc.y, lastZ, acc.z);
-                moveCounter++;
-                // console.log(moveCounter, Math.round(acc.y));
-            } else {
-                moveCounter = Math.max(0, --moveCounter);
-            }
-
-            // This should trigger somewhere near the top of the handbell action
-            // in order to account for delay in audio.play(). Needs to be swung pretty hard.
-            if (moveCounter > 1 && acc.y < -7) {
-                // Make sure we're not calling playNote() twice in a row.
-                // JOSH:  This debounce seems really high for a music note.
-                sendNote();
-                moveCounter = 0;
-                lastZ = 0;
-                lastY = 0;
-                lastX = 0;
-            } else {
-                lastX = acc.x;
-                lastY = acc.y;
-                lastZ = acc.z;
-            }
+            
         }
     }
 
@@ -93,6 +93,7 @@
         if (!blocked) {
             blocked = true;
             emitNote();
+            console.log("PLAY NOTE ---------------------- ##################### ")
             setTimeout(function () {
                 blocked = false;
             }, debounceTime)
@@ -115,6 +116,8 @@
     $(document).ready(function () {
 
         window.addEventListener("devicemotion", handleMotion, true);
+        // window.addEventListener("MozOrientation", handleMotion, true);
+        // window.addEventListener("deviceorientation", handleMotion, true);
 
         var savedNote = localStorage.getItem("note");
         let noteAbbr;
