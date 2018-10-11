@@ -11,8 +11,6 @@
     <!--<link rel="stylesheet" href="/bell.css">-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="text/javascript" src="socket.io.js"></script>
-    <script type="text/javascript" src="motiongesture.js"></script>
-    <script type="text/javascript" src="motiongesture-library.js"></script>
         
 </head>
 <script>
@@ -32,11 +30,24 @@
     var selectedNote = "-1";
     let lastX, lastY, lastZ, lastDelta;
     let blocked = false;        // i have no idea what the intent of this is.
-    var debounceTime = 500;    // 600 ms seemed too short.  i was getting double events.
-    let primed = false;
+    var debounceTime = 400;    // 600 ms seemed too short.  i was getting double events.
+    let primed = true;
     let down = false;
     let up = false;
-    let rest = false;
+    let resting = false;
+    let restStart, restElapsed;
+    // const movement = {
+    //     primed: [-12, -3],
+    //     down: [3, 13],
+    //     up: [-100, -30],
+    //     rest: [-2, 2]
+    // }
+    const movement = {
+        primed: [4, 10],
+        down: [-1000, -10],
+        up: [4, 20],
+        rest: [-2, 2]
+    }
 
     function emitNote () {
         socket.emit('note', selectedNote);
@@ -50,32 +61,42 @@
         }
 
         if (!acc.x) return;
-        acc.x = Math.round(acc.x)
-        acc.y = Math.round(acc.y)
-        acc.z = Math.round(acc.z)
-
-        
 
         //only log if x,y,z > 1
         if (Math.abs(acc.x) >= 1) {
             // console.log('motion', acc);
-            if (!primed) {
-                primed = acc.x >= -11 && acc.x <= -3;
-                return;
-            } 
+            // if (!primed) {
+            //     primed = acc.x >= movement.primed[0] && acc.x <= movement.primed[1];
+            //     if (primed) console.log(`Primed----------------------: ${acc.x}`)
+            // } 
+            
+            if (!resting) {
+                resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
+                if (resting) {restStart = (new Date()).getTime()}
+            } else {
+                resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
+                if (resting) {restElapsed = (new Date()).getTime() - restStart}
+            }
 
-            if (primed && !down) {
-                down = acc.x >= 4 && acc.x <= 13;
+            if (restElapsed > 600) {
+                console.log('Resetting '+ restElapsed)
+                down = up = resting = false;
+                restElapsed = 0;
                 return
             }
 
+            if (primed && !down) {
+                down = acc.x <= movement.down[1];
+                if (down) console.log(`Down------------------------: ${acc.x}`)
+            }
+
             if (primed && down && !up) {
-                up = acc.x <= -30;
+                up = acc.x >= movement.up[0];
                 if (up) {
                     sendNote();
-                    down = up = primed = false;
+                    console.log(`Up ------------------------: ${acc.x}`)
+                    down = up = false;
                 } 
-                return
             }
             // Make sure we see a big enough swing in the handbell
             

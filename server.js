@@ -9,7 +9,7 @@ var midiOutput = new midi.output();
 midiOutput.openVirtualPort('okgo-local');
 
 // lookup for whatever Midi thing needs to be triggered based upon note sent to call.
-const playTime = 500; // milliseconds
+const playTime = 200; // milliseconds
 const notes = {
     "C2": "36",
     "C3": "48",
@@ -58,7 +58,7 @@ const notes = {
 
 app.use(express.static('public'));
 app.get('/*', function (req, res) {
-    res.sendFile(__dirname + '/index.html');
+    res.send('index.html');
 });
 
 // we should be able to support 1400-1800 concurrent connections (a lot more than 40)
