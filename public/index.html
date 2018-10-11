@@ -34,6 +34,7 @@
     let primed = true;
     let down = false;
     let up = false;
+    let timer = '';
     let resting = false;
     let restStart, restElapsed;
     // const movement = {
@@ -46,11 +47,12 @@
         primed: [4, 10],
         down: [-1000, -10],
         up: [4, 20],
-        rest: [-2, 2]
+        rest: [-3, 3]
     }
 
     function emitNote () {
         socket.emit('note', selectedNote);
+        console.timeEnd(timer);
     }
 
     function handleMotion (e) {
@@ -60,53 +62,42 @@
             acc = e.accelerationIncludingGravity;
         }
 
-        if (!acc.x) return;
+        if (!down) {
+            down = acc.x <= movement.down[1];
+            if (down) console.log(`Down------------------------: ${acc.x}`)
+        }
 
-        //only log if x,y,z > 1
-        if (Math.abs(acc.x) >= 1) {
-            // console.log('motion', acc);
-            // if (!primed) {
-            //     primed = acc.x >= movement.primed[0] && acc.x <= movement.primed[1];
-            //     if (primed) console.log(`Primed----------------------: ${acc.x}`)
-            // } 
-            
-            if (!resting) {
-                resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
-                if (resting) {restStart = (new Date()).getTime()}
-            } else {
-                resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
-                if (resting) {restElapsed = (new Date()).getTime() - restStart}
-            }
+        if (down && !up) {
+            up = acc.x >= movement.up[0];
+            if (up) {
+                console.log(`Up ------------------------: ${acc.x}`)
+                timer = ""+acc.x;
+                console.time(timer)
+                sendNote();
+                down = up = false;
+            } 
+        }
 
-            if (restElapsed > 600) {
-                console.log('Resetting '+ restElapsed)
-                down = up = resting = false;
-                restElapsed = 0;
-                return
-            }
+        if (!resting) {
+            resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
+            if (resting) {restStart = (new Date()).getTime()}
+        } else {
+            resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
+            if (resting) {restElapsed = (new Date()).getTime() - restStart}
+        }
 
-            if (primed && !down) {
-                down = acc.x <= movement.down[1];
-                if (down) console.log(`Down------------------------: ${acc.x}`)
-            }
-
-            if (primed && down && !up) {
-                up = acc.x >= movement.up[0];
-                if (up) {
-                    sendNote();
-                    console.log(`Up ------------------------: ${acc.x}`)
-                    down = up = false;
-                } 
-            }
-            // Make sure we see a big enough swing in the handbell
-            
+        if (restElapsed > 600) {
+            console.log('Resetting '+ restElapsed)
+            down = up = resting = false;
+            restElapsed = 0;
+            return
         }
     }
 
     function sendNote () {
         if (!blocked) {
-            blocked = true;
             emitNote();
+            blocked = true;
             console.log("PLAY NOTE ---------------------- ##################### ")
             setTimeout(function () {
                 blocked = false;

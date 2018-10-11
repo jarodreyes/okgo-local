@@ -66,7 +66,7 @@ app.get('/*', function (req, res) {
 io.on('connection', function (socket) {
     console.log('a phone connected');
     socket.on('note', function (msg) {
-
+        console.time("note")
         // I'm guessing this is the variable sent to OSC.
         // You can add it the value in the lookup above.
         var midiNote = notes[msg];
@@ -82,7 +82,7 @@ const sendMidi = (note) => {
     console.log(`Playing Note ${note}`);
     midiOutput.sendMessage([144,note,100]);
     midiOutput.sendMessage([176,66,0]); // sustain
-
+    console.timeEnd("note")
     // NOTE OFF
     setTimeout(() => {
       midiOutput.sendMessage([ 128, note, 0 ]);
