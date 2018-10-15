@@ -37,12 +37,7 @@
     let timer = '';
     let resting = false;
     let restStart, restElapsed;
-    // const movement = {
-    //     primed: [-12, -3],
-    //     down: [3, 13],
-    //     up: [-100, -30],
-    //     rest: [-2, 2]
-    // }
+
     const movement = {
         primed: [4, 10],
         down: [-1000, -10],
@@ -90,7 +85,6 @@
             console.log('Resetting '+ restElapsed)
             down = up = resting = false;
             restElapsed = 0;
-            return
         }
     }
 
