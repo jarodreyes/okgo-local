@@ -124,7 +124,8 @@ const sendMidi = (note) => {
     // midiOutput.sendMessage([144+1,note,100]);
     midiOutput.sendMessage([144,note,100]);
     // midiOutput.sendMessage([244,note,100]);
-    midiOutput.sendMessage([176,66,0]); // sustain
+    // midiOutput.sendMessage([176,66,0]);
+    // midiOutput.sendMessage([176,64,0]); // sustain
     console.timeEnd("note")
     // NOTE OFF
     setTimeout(() => {
