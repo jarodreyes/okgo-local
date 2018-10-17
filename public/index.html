@@ -14,7 +14,12 @@
         
 </head>
 <script>
-    var socket = io();
+    var socket = io({
+      transports: ['websocket']
+    });
+    socket.on('reconnect_attempt', () => {
+      socket.io.opts.transports = ['polling', 'websocket'];
+    });
     socket.on('connect', () => {
         styleConnected();
     })
@@ -30,7 +35,7 @@
     var selectedNote = "-1";
     let lastX, lastY, lastZ, lastDelta;
     let blocked = false;        // i have no idea what the intent of this is.
-    var debounceTime = 400;    // 600 ms seemed too short.  i was getting double events.
+    var debounceTime = 100;    // 600 ms seemed too short.  i was getting double events.
     let primed = true;
     let down = false;
     let up = false;
@@ -40,16 +45,14 @@
 
     const movement = {
         primed: [4, 10],
-        down: [-1000, -25, -12],
-        up: [7, 30, -20],
+        down: [-1000, -21, -10],
+        up: [7, 24, -18],
         rest: [-3, 3]
     }
 
     function emitNote () {
-        let time = new Date();
-        // socket.emit('startTime', time);
         socket.emit('note', selectedNote);
-        console.timeEnd(timer);
+        console.log("Emit note");
     }
 
     function handleMotion (e) {
@@ -61,40 +64,41 @@
 
         if (!down) {
             down = acc.x <= movement.down[1] && acc.y <= movement.down[1] && acc.y <= movement.down[2];
-            if (down) console.log(`Down------------------------: ${acc.x}`)
+            // if (down) console.log(`Down------------------------: ${acc.x}`)
         }
 
         if (down && !up) {
             up = acc.x >= movement.up[1] && acc.y <= movement.up[2];
             if (up) {
-                console.log(`Up ------------------------: ${acc.x}`)
-                timer = ""+acc.x;
-                console.time(timer)
                 sendNote();
+                // console.log(`Up ------------------------: ${acc.x}`)
+                // timer = ""+acc.x;
+                // console.time(timer)
                 down = up = false;
-            } 
+                return;
+            }
         }
 
-        if (!resting) {
-            resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
-            if (resting) {restStart = (new Date()).getTime()}
-        } else {
-            resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
-            if (resting) {restElapsed = (new Date()).getTime() - restStart}
-        }
+        // if (!resting) {
+        //     resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
+        //     if (resting) {restStart = (new Date()).getTime()}
+        // } else {
+        //     resting = acc.x >= movement.rest[0] && acc.x <= movement.rest[1];
+        //     if (resting) {restElapsed = (new Date()).getTime() - restStart}
+        // }
 
-        if (restElapsed > 600) {
-            console.log('Resetting '+ restElapsed)
-            down = up = resting = false;
-            restElapsed = 0;
-        }
+        // if (restElapsed > 600) {
+        //     // console.log('Resetting '+ restElapsed)
+        //     down = up = resting = false;
+        //     restElapsed = 0;
+        // }
     }
 
     function sendNote () {
         if (!blocked) {
             emitNote();
             blocked = true;
-            console.log("PLAY NOTE ---------------------- ##################### ")
+            // console.log("PLAY NOTE ---------------------- ##################### ")
             setTimeout(function () {
                 blocked = false;
             }, debounceTime)
