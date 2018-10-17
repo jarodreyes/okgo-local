@@ -88,31 +88,31 @@ select {
 }
 
 .action.live.Bb {
-    background-color: #0092bf
-}
-
-.action.live.B {
     background-color: #ED3193
 }
 
+.action.live.B {
+    background-color: #0092bf
+}
+
 .action.live.C {
-    background-color: #FFF453
+    background-color: #e00e27
 }
 
 .action.live.Db {
-    background-color: #fff120
-}
-
-.action.live.D {
     background-color: #593A96
 }
 
+.action.live.D {
+    background-color: #fff120
+}
+
 .action.live.Eb {
-    background-color: #432c71
+    background-color: #00B26C
 }
 
 .action.live.E {
-    background-color: #00B26C
+    background-color: #432c71
 }
 
 .action.live.F {
@@ -120,7 +120,7 @@ select {
 }
 
 .action.live.Gb {
-    background-color: #e00e27
+    background-color: #FFF453
 }
 
 .action.live.G {

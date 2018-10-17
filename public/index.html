@@ -121,22 +121,23 @@
         // window.addEventListener("deviceorientation", handleMotion, true);
 
         var savedNote = localStorage.getItem("note");
-        let noteAbbr;
+        let noteAbbr, noteLabel;
 
         if (savedNote) {
             selectedNote = savedNote;
+            noteLabel = $(`#whichnote option[value=${selectedNote}]`).text();
             noteAbbr = selectedNote.length >= 3 ? `${selectedNote[0]}${selectedNote[1]}` : selectedNote[0];
             $(".action").addClass(noteAbbr);
-            $("#note").html(selectedNote);
             $('#whichnote').val(selectedNote);
+            $("#note").html(noteLabel);
         }
 
         $("#whichnote").change(function () {
             var which = $("#whichnote option:selected");
             if (which.val() !== "-1") {
                 selectedNote = which.val();
-                noteAbbr = selectedNote.length >= 3 ? `${selectedNote[0]}${selectedNote[1]}` : selectedNote[0];
-                $("#note").html(selectedNote);
+                noteLabel = which.text();
+                $("#note").html(noteLabel);
                 localStorage.setItem("note", selectedNote);
             }
         });
