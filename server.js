@@ -83,7 +83,7 @@ const notes = {
     "Bb4": "70",
     "Bb5": "82",
     "Bb6": "94",
-    "Bb7": "106",
+    "Bb7": "106"
 };
 
 app.use(express.static('public'));
@@ -103,6 +103,13 @@ io.on('connection', function (socket) {
         sendMidi(midiNote);
 
     });
+    socket.on('startTime', function (msg) {
+        var endTime = new Date();
+        var timeDiff = endTime - new Date(msg); //in ms
+        // strip the ms
+        timeDiff /= 1000;
+        console.log(`Time elapsed: ${timeDiff}`);
+    });
     socket.on('disconnect', function () {
         console.log('user disconnected');
     });
@@ -110,7 +117,13 @@ io.on('connection', function (socket) {
 
 const sendMidi = (note) => {
     console.log(`Playing Note ${note}`);
+    // midiOutput.sendMessage([144+5,note,100]);
+    // midiOutput.sendMessage([144+4,note,100]);
+    // midiOutput.sendMessage([144+3,note,100]);
+    // midiOutput.sendMessage([144+2,note,100]);
+    // midiOutput.sendMessage([144+1,note,100]);
     midiOutput.sendMessage([144,note,100]);
+    // midiOutput.sendMessage([244,note,100]);
     midiOutput.sendMessage([176,66,0]); // sustain
     console.timeEnd("note")
     // NOTE OFF
