@@ -123,6 +123,7 @@
         window.addEventListener("devicemotion", handleMotion, true);
         // window.addEventListener("MozOrientation", handleMotion, true);
         // window.addEventListener("deviceorientation", handleMotion, true);
+        let touchNotes = ["F3", "F#3", "G3", "G#3", "A3", "A#3", "C4", "C#4", "D#4"]
 
         var savedNote = localStorage.getItem("note");
         let noteAbbr, noteLabel;
@@ -145,6 +146,12 @@
                 localStorage.setItem("note", selectedNote);
             }
         });
+
+        if (touchNotes.indexOf(selectedNote) > -1) {
+            $('.action').on('click', function() {
+                emitNote();
+            })
+        }
 
         if (socket.connected) {
             $('.action').addClass('live');
