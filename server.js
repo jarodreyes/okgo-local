@@ -8,7 +8,7 @@ var midi = require('midi');
 var midiOutput = new midi.output();
 midiOutput.openVirtualPort('okgo-local');
 
-// lookup for whatever Midi thing needs to be triggered based upon note sent to call.
+// simple Dict of notes -> midi mapping
 const playTime = 200; // milliseconds
 const notes = {
     "C2": "36",
@@ -91,24 +91,17 @@ app.get('/*', function (req, res) {
     res.send('index.html');
 });
 
-// we should be able to support 1400-1800 concurrent connections (a lot more than 40)
-// https://stackoverflow.com/questions/15872788/maximum-concurrent-socket-io-connections
 io.on('connection', function (socket) {
-    console.log('a phone connected');
     socket.on('note', function (msg) {
-        console.time("note")
-        // I'm guessing this is the variable sent to OSC.
-        // You can add it the value in the lookup above.
         var midiNote = notes[msg];
         sendMidi(midiNote);
 
     });
+
     socket.on('startTime', function (msg) {
         var endTime = new Date();
         var timeDiff = endTime - new Date(msg); //in ms
-        // strip the ms
         timeDiff /= 1000;
-        console.log(`Time elapsed: ${timeDiff}`);
     });
     socket.on('disconnect', function () {
         console.log('user disconnected');
@@ -116,18 +109,7 @@ io.on('connection', function (socket) {
 });
 
 const sendMidi = (note) => {
-    console.log(`Playing Note ${note}`);
-    // midiOutput.sendMessage([144+5,note,100]);
-    // midiOutput.sendMessage([144+4,note,100]);
-    // midiOutput.sendMessage([144+3,note,100]);
-    // midiOutput.sendMessage([144+2,note,100]);
-    // midiOutput.sendMessage([144+1,note,100]);
     midiOutput.sendMessage([144,note,100]);
-    // midiOutput.sendMessage([244,note,100]);
-    // midiOutput.sendMessage([176,66,0]);
-    // midiOutput.sendMessage([176,64,0]); // sustain
-    console.timeEnd("note")
-    // NOTE OFF
     setTimeout(() => {
       midiOutput.sendMessage([ 128, note, 0 ]);
     }, playTime)
